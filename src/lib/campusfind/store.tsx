@@ -116,24 +116,19 @@ export function CampusFindProvider({ children }: { children: ReactNode }) {
 
   const getItem = useCallback((id: string) => state.items.find((i) => i.id === id), [state.items]);
 
-  const reportItem = useCallback((input: ReportInput): ReportResult => {
-    const item: Item = {
-      ...input,
-      id: uid("item"),
-      status: "OPEN",
-      createdAt: new Date().toISOString(),
-    };
+  const reportItem = useCallback(
+    (input: ReportInput): ReportResult => {
+      const item: Item = {
+        ...input,
+        id: uid("item"),
+        status: "OPEN",
+        createdAt: new Date().toISOString(),
+      };
 
-    let result: ReportResult = { item, newMatches: [], bestScore: 0 };
-
-    setState((prev) => {
-      const counterparts = prev.items.filter(
+      const counterparts = state.items.filter(
         (i) => i.type !== item.type && i.status !== "RETURNED",
       );
-
-      const alreadyPaired = new Set(
-        prev.matches.flatMap((m) => [m.lostItemId, m.foundItemId]),
-      );
+      const alreadyPaired = new Set(state.matches.flatMap((m) => [m.lostItemId, m.foundItemId]));
 
       const newMatches: MatchCase[] = [];
       let bestScore = 0;
@@ -157,32 +152,38 @@ export function CampusFindProvider({ children }: { children: ReactNode }) {
       }
 
       const matchedIds = new Set(newMatches.flatMap((m) => [m.lostItemId, m.foundItemId]));
-      const items = [...prev.items, item].map((i) =>
-        matchedIds.has(i.id) && i.status === "OPEN" ? { ...i, status: "MATCHED" as const } : i,
-      );
-
-      const activity: ActivityEvent[] = [
+      const at = new Date().toISOString();
+      const events: ActivityEvent[] = [
         {
           id: uid("act"),
           kind: "REPORT",
           message: `${item.type === "LOST" ? "Lost" : "Found"} item reported: ${item.title} at ${item.location}`,
-          at: new Date().toISOString(),
+          at,
         },
         ...newMatches.map((m) => ({
           id: uid("act"),
           kind: "MATCH" as const,
           message: `Smart match found: ${item.title} paired at ${m.matchScore}% confidence`,
-          at: new Date().toISOString(),
+          at,
         })),
-        ...prev.activity,
       ];
 
-      result = { item, newMatches, bestScore };
-      return { items, matches: [...prev.matches, ...newMatches], activity };
-    });
+      setState((prev) => {
+        if (prev.items.some((i) => i.id === item.id)) return prev;
+        return {
+          items: [...prev.items, item].map((i) =>
+            matchedIds.has(i.id) && i.status === "OPEN" ? { ...i, status: "MATCHED" as const } : i,
+          ),
+          matches: [...prev.matches, ...newMatches],
+          activity: [...events, ...prev.activity],
+        };
+      });
 
-    return result;
-  }, []);
+      return { item, newMatches, bestScore };
+    },
+    [state.items, state.matches],
+  );
+
 
   const confirmMatch = useCallback(
     (matchId: string) => {
