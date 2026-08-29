@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BrowseRouteImport } from './routes/browse'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as ReportFoundRouteImport } from './routes/report.found'
 import { Route as ReportLostRouteImport } from './routes/report.lost'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportFoundRoute = ReportFoundRouteImport.update({
@@ -38,12 +44,14 @@ const ReportLostRoute = ReportLostRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/matches': typeof MatchesRoute
   '/report/found': typeof ReportFoundRoute
   '/report/lost': typeof ReportLostRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/matches': typeof MatchesRoute
   '/report/found': typeof ReportFoundRoute
   '/report/lost': typeof ReportLostRoute
 }
@@ -51,20 +59,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/matches': typeof MatchesRoute
   '/report/found': typeof ReportFoundRoute
   '/report/lost': typeof ReportLostRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/browse' | '/report/found' | '/report/lost'
+  fullPaths: '/' | '/browse' | '/matches' | '/report/found' | '/report/lost'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/report/found' | '/report/lost'
-  id: '__root__' | '/' | '/browse' | '/report/found' | '/report/lost'
+  to: '/' | '/browse' | '/matches' | '/report/found' | '/report/lost'
+  id:
+    '__root__' | '/' | '/browse' | '/matches' | '/report/found' | '/report/lost'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
+  MatchesRoute: typeof MatchesRoute
   ReportFoundRoute: typeof ReportFoundRoute
   ReportLostRoute: typeof ReportLostRoute
 }
@@ -83,6 +94,13 @@ declare module '@tanstack/react-router' {
       path: '/browse'
       fullPath: '/browse'
       preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/report/found': {
@@ -105,6 +123,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
+  MatchesRoute: MatchesRoute,
   ReportFoundRoute: ReportFoundRoute,
   ReportLostRoute: ReportLostRoute,
 }
