@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Header } from "@/components/campus/Header";
+import { CampusFindProvider } from "@/lib/campusfind/store";
 
 function NotFoundComponent() {
   return (
@@ -130,8 +132,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <CampusFindProvider>
+        <Header />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <footer className="mx-auto max-w-7xl px-5 py-10 text-center text-xs text-muted-foreground">
+          CampusFind · one lost report + one found report = one unique case.
+        </footer>
+      </CampusFindProvider>
     </QueryClientProvider>
   );
 }
