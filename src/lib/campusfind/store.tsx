@@ -184,71 +184,71 @@ export function CampusFindProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
-  const confirmMatch = useCallback((matchId: string) => {
-    let outcome = { ok: false, message: "Match not found." };
-    setState((prev) => {
-      const match = prev.matches.find((m) => m.id === matchId);
-      if (!match) return prev;
-      if (match.status === "RETURNED") {
-        outcome = { ok: false, message: "Already returned." };
-        return prev;
-      }
-      if (match.status === "CONFIRMED") {
-        outcome = { ok: false, message: "Match already confirmed." };
-        return prev;
-      }
-      outcome = { ok: true, message: "Match confirmed. Contact details unlocked." };
-      return {
+  const confirmMatch = useCallback(
+    (matchId: string) => {
+      const match = state.matches.find((m) => m.id === matchId);
+      if (!match) return { ok: false, message: "Match not found." };
+      if (match.status === "RETURNED") return { ok: false, message: "Already returned." };
+      if (match.status === "CONFIRMED") return { ok: false, message: "Match already confirmed." };
+
+      setState((prev) => ({
         ...prev,
-        matches: prev.matches.map((m) => (m.id === matchId ? { ...m, status: "CONFIRMED" } : m)),
+        matches: prev.matches.map((m) =>
+          m.id === matchId ? { ...m, status: "CONFIRMED" as const } : m,
+        ),
         activity: [
           {
             id: uid("act"),
-            kind: "CONFIRM",
+            kind: "CONFIRM" as const,
             message: `Match confirmed (${match.matchScore}% confidence)`,
             at: new Date().toISOString(),
           },
           ...prev.activity,
         ],
-      };
-    });
-    return outcome;
-  }, []);
+      }));
+      return { ok: true, message: "Match confirmed. Contact details unlocked." };
+    },
+    [state.matches],
+  );
 
-  const markReturned = useCallback((matchId: string) => {
-    let outcome = { ok: false, message: "Match not found." };
-    setState((prev) => {
-      const match = prev.matches.find((m) => m.id === matchId);
-      if (!match) return prev;
-      if (match.status === "RETURNED") {
-        outcome = { ok: false, message: "Already returned." };
-        return prev;
-      }
+  const markReturned = useCallback(
+    (matchId: string) => {
+      const match = state.matches.find((m) => m.id === matchId);
+      if (!match) return { ok: false, message: "Match not found." };
+      if (match.status === "RETURNED") return { ok: false, message: "Already returned." };
+
       const at = new Date().toISOString();
-      const lost = prev.items.find((i) => i.id === match.lostItemId);
-      outcome = { ok: true, message: "Item returned to its owner. Case closed." };
-      return {
-        items: prev.items.map((i) =>
-          i.id === match.lostItemId || i.id === match.foundItemId
-            ? { ...i, status: "RETURNED" as const }
-            : i,
-        ),
-        matches: prev.matches.map((m) =>
-          m.id === matchId ? { ...m, status: "RETURNED" as const, returnedAt: at } : m,
-        ),
-        activity: [
-          {
-            id: uid("act"),
-            kind: "RETURN",
-            message: `Returned to owner: ${lost?.title ?? "Item"} ✓`,
-            at,
-          },
-          ...prev.activity,
-        ],
-      };
-    });
-    return outcome;
-  }, []);
+      const lost = state.items.find((i) => i.id === match.lostItemId);
+
+      setState((prev) => {
+        const current = prev.matches.find((m) => m.id === matchId);
+        if (!current || current.status === "RETURNED") return prev;
+        return {
+          items: prev.items.map((i) =>
+            i.id === match.lostItemId || i.id === match.foundItemId
+              ? { ...i, status: "RETURNED" as const }
+              : i,
+          ),
+          matches: prev.matches.map((m) =>
+            m.id === matchId ? { ...m, status: "RETURNED" as const, returnedAt: at } : m,
+          ),
+          activity: [
+            {
+              id: uid("act"),
+              kind: "RETURN" as const,
+              message: `Returned to owner: ${lost?.title ?? "Item"} ✓`,
+              at,
+            },
+            ...prev.activity,
+          ],
+        };
+      });
+
+      return { ok: true, message: "Item returned to its owner. Case closed." };
+    },
+    [state.matches, state.items],
+  );
+
 
   const resetDemo = useCallback(() => setState(seed()), []);
 
