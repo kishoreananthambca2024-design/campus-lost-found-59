@@ -172,7 +172,7 @@ export function ReportForm({ type }: { type: ItemType }) {
                     <Sparkles className="size-4" /> Match Found!
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {result.newMatches.length} possible match at {result.newMatches[0].matchScore}%
+                    {result.newMatches.length} possible match at {result.newMatches[0]?.matchScore}%
                     confidence.
                   </p>
                   <Link
